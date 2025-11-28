@@ -5,10 +5,15 @@ import { ArrowLeft, Send } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Bot } from "lucide-react";
 
 export default function ConversationPage() {
     const params = useParams();
     const id = params?.id;
+    const [aiEnabled, setAiEnabled] = useState(true);
 
     return (
         <div className="flex flex-col h-full">
@@ -22,6 +27,16 @@ export default function ConversationPage() {
                 <div>
                     <h2 className="font-semibold">User {id}</h2>
                     <p className="text-sm text-gray-500">Online</p>
+                </div>
+                <div className="ml-auto flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border">
+                    <Bot className="w-4 h-4 text-blue-500" />
+                    <Label htmlFor="ai-mode" className="text-sm font-medium cursor-pointer">AI Agent</Label>
+                    <Switch
+                        id="ai-mode"
+                        checked={aiEnabled}
+                        onCheckedChange={setAiEnabled}
+                        className="scale-75"
+                    />
                 </div>
             </div>
 

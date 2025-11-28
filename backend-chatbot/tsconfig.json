@@ -6,9 +6,9 @@
     // "outDir": "./dist",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "target": "ES2020",
-    "module": "commonjs", // Changed to nodenext for native ES module support in Node.js
-    "moduleResolution": "node", // Changed to nodenext to align with Node.js ES module resolution
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
@@ -42,5 +42,13 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true
-  }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "prisma.config.ts"
+  ]
 }

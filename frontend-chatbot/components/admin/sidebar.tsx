@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 
 export function Sidebar() {
     const pathname = usePathname();
-    const [aiEnabled, setAiEnabled] = useState(true);
 
     const links = [
         {
@@ -58,19 +57,6 @@ export function Sidebar() {
                 ))}
             </nav>
 
-            <div className="p-4 border-t">
-                <div className="flex items-center justify-between px-4 py-2 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-blue-500" />
-                        <Label htmlFor="ai-mode" className="text-sm font-medium">AI Agent</Label>
-                    </div>
-                    <Switch
-                        id="ai-mode"
-                        checked={aiEnabled}
-                        onCheckedChange={setAiEnabled}
-                    />
-                </div>
-            </div>
         </div>
     );
 }
