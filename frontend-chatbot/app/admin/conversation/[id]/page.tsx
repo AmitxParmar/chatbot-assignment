@@ -1,20 +1,72 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Bot, User } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Bot } from "lucide-react";
 import { useGetChatHistory, useSaveMessage } from "@/hooks/useChat";
 import { calculateTime } from "@/lib/calculateTime";
 import { socketClient } from "@/lib/socket";
 import { useQueryClient } from "@tanstack/react-query";
 import { chatKeys } from "@/hooks/useChat";
 import type { Message } from "@/types/chat.types";
+
+interface ChatMessageProps {
+    message: Message;
+}
+
+function ChatMessage({ message }: ChatMessageProps) {
+    const isFromUser = message.role === 'user';
+
+    return (
+        <div
+            className={`flex ${isFromUser ? 'justify-end' : 'justify-start'} items-start`}
+        >
+            {/* Icons for Admin and AI messages (left side) */}
+            {!isFromUser && (
+                <div className="mr-2 shrink-0 mt-1">
+                    {message.role === "ai" && <Bot size={20} className="text-blue-500" />}
+                    {message.role === "admin" && (
+                        <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold">A</div>
+                    )}
+                </div>
+            )}
+
+            {/* Message Bubble */}
+            <div
+                className={`max-w-[80%] rounded-2xl px-4 py-2.5 shadow-sm ${isFromUser
+                    ? 'bg-blue-600 text-white rounded-br-none'
+                    : message.role === "admin"
+                        ? 'bg-purple-100 text-purple-800 border border-purple-200 rounded-bl-none'
+                        : 'bg-blue-50 text-blue-800 border border-blue-200 rounded-bl-none'
+                    }`}
+            >
+                <p className="text-sm leading-relaxed">{message.message}</p>
+                <p
+                    className={`text-[10px] mt-1 text-right ${isFromUser
+                        ? 'text-blue-100'
+                        : message.role === "admin"
+                            ? 'text-purple-400'
+                            : 'text-blue-400'
+                        }`}
+                >
+                    {message.createdAt ? calculateTime(message.createdAt) : '-'}
+                </p>
+            </div>
+
+            {/* Icon for User messages (right side) */}
+            {isFromUser && (
+                <div className="ml-2 shrink-0 mt-1">
+                    <User size={20} className="text-blue-600" />
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function ConversationPage() {
     const params = useParams();
@@ -109,32 +161,9 @@ export default function ConversationPage() {
                 {isLoading ? (
                     <div className="text-center text-gray-500">Loading messages...</div>
                 ) : chatHistory && chatHistory.length > 0 ? (
-                    chatHistory.map((msg) => {
-                        // Admin and AI messages go to the right, user messages to the left
-                        const isFromAdmin = msg.role === 'admin' || msg.role === 'ai';
-
-                        return (
-                            <div
-                                key={msg.id}
-                                className={`flex ${isFromAdmin ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div
-                                    className={`p-3 rounded-lg shadow-sm max-w-[80%] ${isFromAdmin
-                                        ? 'bg-blue-600 text-white rounded-tr-none'
-                                        : 'bg-white border rounded-tl-none'
-                                        }`}
-                                >
-                                    <p className="text-sm">{msg.message}</p>
-                                    <span
-                                        className={`text-xs mt-1 block ${isFromAdmin ? 'text-blue-100' : 'text-gray-400'
-                                            }`}
-                                    >
-                                        {msg.createdAt ? calculateTime(msg.createdAt) : '-'}
-                                    </span>
-                                </div>
-                            </div>
-                        );
-                    })
+                    chatHistory.map((msg) => (
+                        <ChatMessage key={msg.id} message={msg} />
+                    ))
                 ) : (
                     <div className="text-center text-gray-500">No messages yet</div>
                 )}

@@ -103,23 +103,42 @@ export default function ChatWidget() {
                             <div
                                 key={msg.id}
                                 className={`flex ${msg?.role === "user" ? "justify-end" : "justify-start"
-                                    }`}
+                                    } items-start`}
                             >
+                                {(msg.role === "ai" || msg.role === "admin") && (
+                                    <div className="mr-2 shrink-0 mt-1">
+                                        {msg.role === "ai" && <Bot size={20} className="text-gray-500" />}
+                                        {msg.role === "admin" && (
+                                            // Placeholder for Admin Icon (e.g., <ShieldCheck size={20} className="text-purple-600" />)
+                                            <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold">A</div>
+                                        )}
+                                    </div>
+                                )}
                                 <div
                                     className={`max-w-[80%] rounded-2xl px-4 py-2.5 shadow-sm ${msg?.role === "user"
                                         ? "bg-blue-600 text-white rounded-br-none"
-                                        : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
+                                        : msg?.role === "admin"
+                                            ? "bg-purple-100 text-purple-800 border border-purple-200 rounded-bl-none"
+                                            : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
                                         }`}
                                 >
-
                                     <p className="text-sm leading-relaxed">{msg.message}</p>
                                     <p
-                                        className={`text-[10px] mt-1 text-right ${msg?.role === "user" ? "text-blue-100" : "text-gray-400"
+                                        className={`text-[10px] mt-1 text-right ${msg?.role === "user"
+                                            ? "text-blue-100"
+                                            : msg?.role === "admin"
+                                                ? "text-purple-400"
+                                                : "text-gray-400"
                                             }`}
                                     >
                                         {msg?.createdAt ? calculateTime(msg.createdAt) : '-'}
                                     </p>
                                 </div>
+                                {msg.role === "user" && (
+                                    <div className="ml-2 shrink-0 mt-1">
+                                        <User size={20} className="text-blue-600" />
+                                    </div>
+                                )}
                             </div>
                         ))}
                         <div ref={messagesEndRef} />
