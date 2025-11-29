@@ -1,8 +1,5 @@
 import "dotenv/config";
-import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
-
-const connectionString = process.env.DB_URL;
 
 let prisma: PrismaClient;
 
@@ -12,9 +9,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 if (!globalForPrisma.prisma) {
-    const adapter = new PrismaPg({ connectionString });
     globalForPrisma.prisma = new PrismaClient({
-        adapter,
         log: ['query', 'info', 'warn', 'error']
     });
 }
