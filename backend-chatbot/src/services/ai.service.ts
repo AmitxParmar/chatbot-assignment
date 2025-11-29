@@ -52,7 +52,7 @@ class AIService {
             const result = await this.model.generateContent(context);
             const response = result.response;
             const text = response.text();
-            console.log(text)
+
             return text.trim();
         } catch (error) {
             console.error("Error generating AI response with Gemini:", error);
