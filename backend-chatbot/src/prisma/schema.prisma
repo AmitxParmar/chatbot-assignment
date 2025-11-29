@@ -6,29 +6,33 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  
 }
 
 model Conversation {
   id        String    @id @default(cuid())
-  title     String?
+  lastMessage     String?
+  aiEnabled Boolean @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   messages  Message[]
 
   @@map("conversations")
 }
-
+enum Role {
+  user
+  ai
+  admin
+}
 model Message {
   id             String       @id @default(cuid())
   conversationId String
-  role           String       // "user" or "assistant"
-  content        String       @db.Text
+  role           Role       // "user" or "assistant"
+  message        String       @db.Text
   createdAt      DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
