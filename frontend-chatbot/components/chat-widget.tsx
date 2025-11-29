@@ -88,15 +88,7 @@ export default function ChatWidget() {
                 <div className="mb-4 w-80 sm:w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300">
                     {/* Header */}
                     <div className="bg-blue-600 p-4 flex justify-between items-center text-white">
-                        <div className="flex items-center gap-2">
-                            <div className="bg-white/20 p-1.5 rounded-full">
-                                <Bot size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-sm">AI Assistant</h3>
-                                <p className="text-xs text-blue-100">Online</p>
-                            </div>
-                        </div>
+
                         <button
                             onClick={() => setIsOpen(false)}
                             className="hover:bg-white/20 p-1 rounded-full transition-colors"

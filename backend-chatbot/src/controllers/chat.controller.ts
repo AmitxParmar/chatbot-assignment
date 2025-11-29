@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import chatService from "../services/chat.service";
-import { Conversation } from "../types/types";
+import { prisma } from "../lib/prisma";
+import { emitConversationUpdate } from "../socket";
 
 class ChatController {
-
 
     // Save a message to a conversation
     async saveMessage(req: Request, res: Response) {
@@ -67,6 +67,44 @@ class ChatController {
             console.error("Error in getAllConversations controller:", error);
             return res.status(500).json({
                 error: "Failed to fetch conversations"
+            });
+        }
+    }
+
+    // Toggle AI enabled status for a conversation
+    async toggleAI(req: Request, res: Response) {
+        try {
+            const { conversationId } = req.params;
+            const { aiEnabled } = req.body;
+
+            if (!conversationId) {
+                return res.status(400).json({
+                    error: "conversationId is required"
+                });
+            }
+
+            if (typeof aiEnabled !== 'boolean') {
+                return res.status(400).json({
+                    error: "aiEnabled must be a boolean"
+                });
+            }
+
+            const updatedConversation = await prisma.conversation.update({
+                where: { id: conversationId },
+                data: { aiEnabled }
+            });
+
+            // Emit socket event to notify clients
+            emitConversationUpdate(conversationId, {
+                id: conversationId,
+                aiEnabled: updatedConversation.aiEnabled
+            });
+
+            return res.status(200).json(updatedConversation);
+        } catch (error) {
+            console.error("Error in toggleAI controller:", error);
+            return res.status(500).json({
+                error: "Failed to toggle AI"
             });
         }
     }
