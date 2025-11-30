@@ -2,8 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link"; // Import Link
 import { socketClient } from "@/lib/socket";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button"; // Assuming Button component exists
 import { useGetConversations, chatKeys, useToggleAI } from "@/hooks/useChat";
 import { calculateTime } from "@/lib/calculateTime";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -56,11 +58,16 @@ export default function AdminPage() {
         <div className="md:px-8">
             <div className="flex justify-between items-center p-3 mb-6">
                 <h2 className="text-2xl font-bold">Chats</h2>
-                {admin && (
-                    <div className="text-sm text-gray-600">
-                        Logged in as: <span className="font-semibold">{admin.name}</span>
-                    </div>
-                )}
+                <div className="flex items-center gap-4">
+                    {admin && (
+                        <div className="text-sm text-gray-600">
+                            Logged in as: <span className="font-semibold">{admin.name}</span>
+                        </div>
+                    )}
+                    <Link href="/" passHref>
+                        <Button variant="outline" className="text-sm">Go to Chatbot</Button>
+                    </Link>
+                </div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border">
                 <div className="grid grid-cols-[1fr_2fr_100px_100px] p-4 border-b bg-gray-50 font-medium text-sm text-gray-500">
@@ -99,3 +106,4 @@ export default function AdminPage() {
         </div>
     );
 }
+
