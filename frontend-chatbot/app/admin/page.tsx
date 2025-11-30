@@ -2,21 +2,21 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // Import Link
+import Link from "next/link";
 import { socketClient } from "@/lib/socket";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button"; // Assuming Button component exists
+import { Button } from "@/components/ui/button";
 import { useGetConversations, chatKeys, useToggleAI } from "@/hooks/useChat";
 import { calculateTime } from "@/lib/calculateTime";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Message } from "@/types/chat.types";
-
+import { Loader2 } from "lucide-react"; // Assuming lucide-react is available for icons
 
 
 export default function AdminPage() {
     const router = useRouter();
-    const { data } = useGetConversations();
+    const { data, isPending: isLoadingConversations } = useGetConversations();
     const { admin, isLoading: isLoadingAdmin } = useAdmin();
     const queryClient = useQueryClient();
     const { mutate: toggleAI } = useToggleAI();
@@ -77,7 +77,11 @@ export default function AdminPage() {
                     <div className="text-right">Timestamp</div>
                 </div>
                 <div className="divide-y">
-                    {data && data.length > 0 ? (
+                    {isLoadingConversations ? (
+                        <div className="p-4 text-center text-gray-500 flex items-center justify-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Loading conversations...
+                        </div>
+                    ) : data && data.length > 0 ? (
                         data.map((chat) => (
                             <div
                                 key={chat.id}
@@ -106,4 +110,3 @@ export default function AdminPage() {
         </div>
     );
 }
-
