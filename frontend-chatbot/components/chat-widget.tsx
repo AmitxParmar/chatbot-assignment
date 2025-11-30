@@ -12,10 +12,12 @@ export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [inputText, setInputText] = useState("");
     const [sessionId, setSessionId] = useState("");
+    const [isOtherTyping, setIsOtherTyping] = useState<string | null>(null); // 'ai' | 'admin' | null
     const { data: messages } = useGetChatHistory(sessionId);
     const { mutate: saveMessage, isPending: isSending } = useSaveMessage();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const queryClient = useQueryClient();
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Initialize session ID
     useEffect(() => {
@@ -53,11 +55,21 @@ export default function ChatWidget() {
             }
         };
 
+        // Listen for typing indicators
+        const handleTyping = (data: { isTyping: boolean; role: string }) => {
+            // Only show typing indicator for admin/AI, not for user's own typing
+            if (data.role !== 'user') {
+                setIsOtherTyping(data.isTyping ? data.role : null);
+            }
+        };
+
         socketClient.onNewMessage(handleNewMessage);
+        socketClient.onTyping(handleTyping);
 
         // Cleanup
         return () => {
             socketClient.offNewMessage();
+            socketClient.offTyping();
         };
     }, [sessionId, queryClient]);
 
@@ -70,12 +82,41 @@ export default function ChatWidget() {
         e.preventDefault();
 
         if (!inputText.trim()) return;
+
+        // Stop typing indicator when sending
+        socketClient.emitTyping(sessionId, false, 'user');
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
         saveMessage({
             conversationId: sessionId,
             role: "user",
             message: inputText,
         });
         setInputText("");
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setInputText(value);
+
+        // Emit typing indicator
+        if (value.trim()) {
+            socketClient.emitTyping(sessionId, true, 'user');
+
+            // Clear existing timeout
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+
+            // Stop typing indicator after 2 seconds of inactivity
+            typingTimeoutRef.current = setTimeout(() => {
+                socketClient.emitTyping(sessionId, false, 'user');
+            }, 2000);
+        } else {
+            socketClient.emitTyping(sessionId, false, 'user');
+        }
     };
 
 
@@ -141,6 +182,38 @@ export default function ChatWidget() {
                                 )}
                             </div>
                         ))}
+
+                        {/* Typing Indicator */}
+                        {isOtherTyping && (
+                            <div className="flex justify-start items-start">
+                                <div className="mr-2 shrink-0 mt-1">
+                                    {isOtherTyping === 'ai' && <Bot size={20} className="text-gray-500" />}
+                                    {isOtherTyping === 'admin' && (
+                                        <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold">A</div>
+                                    )}
+                                </div>
+                                <div className={`rounded-2xl rounded-bl-none px-4 py-2.5 shadow-sm ${isOtherTyping === 'admin'
+                                        ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                        : 'bg-white text-gray-800 border border-gray-100'
+                                    }`}>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-medium">
+                                            {isOtherTyping === 'admin' ? 'Admin' : 'AI'} is typing
+                                        </span>
+                                        <div className="flex space-x-1">
+                                            <div className={`w-2 h-2 rounded-full animate-bounce ${isOtherTyping === 'admin' ? 'bg-purple-400' : 'bg-gray-400'
+                                                }`} style={{ animationDelay: '0ms' }}></div>
+                                            <div className={`w-2 h-2 rounded-full animate-bounce ${isOtherTyping === 'admin' ? 'bg-purple-400' : 'bg-gray-400'
+                                                }`} style={{ animationDelay: '150ms' }}></div>
+                                            <div className={`w-2 h-2 rounded-full animate-bounce ${isOtherTyping === 'admin' ? 'bg-purple-400' : 'bg-gray-400'
+                                                }`} style={{ animationDelay: '300ms' }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -153,7 +226,7 @@ export default function ChatWidget() {
                             <input
                                 type="text"
                                 value={inputText}
-                                onChange={(e) => setInputText(e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Type a message..."
                                 className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none text-gray-700 placeholder:text-gray-400"
                             />

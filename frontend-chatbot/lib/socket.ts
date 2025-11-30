@@ -87,6 +87,13 @@ class SocketClient {
         }
     }
 
+    // Emit typing indicator
+    public emitTyping(conversationId: string, isTyping: boolean, role: string) {
+        if (this.socket) {
+            this.socket.emit('typing', { conversationId, isTyping, role });
+        }
+    }
+
     // Listen for typing indicators
     public onTyping(callback: (data: { isTyping: boolean; role: string }) => void) {
         if (this.socket) {

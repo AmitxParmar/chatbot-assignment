@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { Conversation, Message } from "../types/types";
-import { emitNewMessage } from "../socket";
+import { emitNewMessage, emitTyping } from "../socket";
 import aiService from "./ai.service";
 
 class ChatService {
@@ -29,7 +29,7 @@ class ChatService {
             // Check if AI should respond (only for user messages when AI is enabled)
             if (role === 'user' && conversation.aiEnabled) {
                 // Generate and send AI response asynchronously
-                this.generateAIResponse(conversationId, message).catch(error => {
+                this.generateAIResponse(conversationId, message).catch((error: any) => {
                     console.error("Error generating AI response:", error);
                 });
             }
@@ -49,6 +49,9 @@ class ChatService {
                 return;
             }
 
+            // Emit typing indicator - AI is typing
+            emitTyping(conversationId, { isTyping: true, role: 'ai' });
+
             // Get conversation history for context (optional)
             const history = await this.getChatHistory(conversationId);
 
@@ -56,7 +59,10 @@ class ChatService {
             const aiResponse = await aiService.generateResponse(userMessage, history);
 
             // Add a small delay to make it feel more natural (1-2 seconds)
-            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+
+
+            // Stop typing indicator
+            emitTyping(conversationId, { isTyping: false, role: 'ai' });
 
             // Save AI response
             const aiMessage = await prisma.message.create({
@@ -79,6 +85,8 @@ class ChatService {
             console.log(`🤖 AI responded to conversation ${conversationId}`);
         } catch (error) {
             console.error("Error in generateAIResponse:", error);
+            // Stop typing indicator on error
+            emitTyping(conversationId, { isTyping: false, role: 'ai' });
             throw error;
         }
     }

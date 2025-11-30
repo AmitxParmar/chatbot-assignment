@@ -22,4 +22,11 @@ export const chatService = {
         const response = await axios.get(`${API_BASE_URL}/api/chat/conversations`);
         return response.data;
     },
+
+    toggleAI: async (conversationId: string, aiEnabled: boolean) => {
+        console.log('Service toggleAI called:', { conversationId, aiEnabled });
+        const response = await axios.patch(`${API_BASE_URL}/api/chat/conversations/${conversationId}/toggle-ai`, { aiEnabled });
+        console.log('Service toggleAI response:', response.data);
+        return response.data;
+    },
 };

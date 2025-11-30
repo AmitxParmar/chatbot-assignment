@@ -4,9 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, MessageSquare, Settings, Bot } from "lucide-react";
-import { useState } from "react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -33,8 +31,8 @@ export function Sidebar() {
     ];
 
     return (
-        <div className="w-64 border-r bg-white h-full flex flex-col">
-            <div className="p-6 border-b">
+        <div className="w-64 hidden md:flex border-r bg-white h-full flex-col">
+            <div className="md:p-6 border-b">
                 <h1 className="text-2xl font-bold">Admin</h1>
             </div>
 

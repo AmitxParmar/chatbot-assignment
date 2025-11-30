@@ -12,4 +12,7 @@ router.get("/conversations/:conversationId/messages", chatController.getChatHist
 // GET /api/chat/conversations - Get all conversations (admin)
 router.get("/conversations", chatController.getAllConversations);
 
+// PATCH /api/chat/conversations/:conversationId/toggle-ai - Toggle AI enabled status
+router.patch("/conversations/:conversationId/toggle-ai", chatController.toggleAI);
+
 export default router;

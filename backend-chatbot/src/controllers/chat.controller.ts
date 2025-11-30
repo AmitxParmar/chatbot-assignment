@@ -74,6 +74,7 @@ class ChatController {
     // Toggle AI enabled status for a conversation
     async toggleAI(req: Request, res: Response) {
         try {
+            console.log('toggleAI called with params:', req.params, 'body:', req.body);
             const { conversationId } = req.params;
             const { aiEnabled } = req.body;
 

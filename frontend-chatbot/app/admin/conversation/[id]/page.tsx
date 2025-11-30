@@ -6,8 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useGetChatHistory, useSaveMessage } from "@/hooks/useChat";
 import { calculateTime } from "@/lib/calculateTime";
 import { socketClient } from "@/lib/socket";
@@ -71,12 +69,14 @@ function ChatMessage({ message }: ChatMessageProps) {
 export default function ConversationPage() {
     const params = useParams();
     const id = typeof params?.id === 'string' ? params.id : '';
-    const [aiEnabled, setAiEnabled] = useState(true);
+
     const [inputMessage, setInputMessage] = useState('');
+    const [isUserTyping, setIsUserTyping] = useState(false);
     const { data: chatHistory, isLoading } = useGetChatHistory(id);
     const { mutate: saveMessage, isPending: isSending } = useSaveMessage();
     const queryClient = useQueryClient();
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -110,17 +110,33 @@ export default function ConversationPage() {
             }
         };
 
+        // Listen for typing indicators
+        const handleTyping = (data: { isTyping: boolean; role: string }) => {
+            // Only show typing indicator for user, not for admin's own typing
+            if (data.role === 'user') {
+                setIsUserTyping(data.isTyping);
+            }
+        };
+
         socketClient.onNewMessage(handleNewMessage);
+        socketClient.onTyping(handleTyping);
 
         // Cleanup
         return () => {
             socketClient.offNewMessage();
+            socketClient.offTyping();
         };
     }, [id, queryClient]);
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputMessage.trim() || !id) return;
+
+        // Stop typing indicator when sending
+        socketClient.emitTyping(id, false, 'admin');
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
 
         saveMessage({
             conversationId: id,
@@ -129,6 +145,28 @@ export default function ConversationPage() {
         });
 
         setInputMessage('');
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setInputMessage(value);
+
+        // Emit typing indicator
+        if (value.trim()) {
+            socketClient.emitTyping(id, true, 'admin');
+
+            // Clear existing timeout
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+
+            // Stop typing indicator after 2 seconds of inactivity
+            typingTimeoutRef.current = setTimeout(() => {
+                socketClient.emitTyping(id, false, 'admin');
+            }, 2000);
+        } else {
+            socketClient.emitTyping(id, false, 'admin');
+        }
     };
 
     return (
@@ -144,7 +182,7 @@ export default function ConversationPage() {
                     <h2 className="font-semibold">Conversation {id}</h2>
                     <p className="text-sm text-gray-500">Online</p>
                 </div>
-                <div className="ml-auto flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border">
+                {/*   <div className="ml-auto flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border">
                     <Bot className="w-4 h-4 text-blue-500" />
                     <Label htmlFor="ai-mode" className="text-sm font-medium cursor-pointer">AI Agent</Label>
                     <Switch
@@ -153,7 +191,7 @@ export default function ConversationPage() {
                         onCheckedChange={setAiEnabled}
                         className="scale-75"
                     />
-                </div>
+                </div> */}
             </div>
 
             {/* Messages Area */}
@@ -167,6 +205,26 @@ export default function ConversationPage() {
                 ) : (
                     <div className="text-center text-gray-500">No messages yet</div>
                 )}
+
+                {/* Typing Indicator */}
+                {isUserTyping && (
+                    <div className="flex justify-end items-start">
+                        <div className="bg-blue-600 text-white rounded-2xl rounded-br-none px-4 py-2.5 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium">User is typing</span>
+                                <div className="flex space-x-1">
+                                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="ml-2 shrink-0 mt-1">
+                            <User size={20} className="text-blue-600" />
+                        </div>
+                    </div>
+                )}
+
                 <div ref={messagesEndRef} />
             </div>
 
@@ -177,7 +235,7 @@ export default function ConversationPage() {
                         placeholder="Type a message..."
                         className="flex-1"
                         value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
+                        onChange={handleInputChange}
                         disabled={isSending}
                     />
                     <Button size="icon" type="submit" disabled={isSending || !inputMessage.trim()}>

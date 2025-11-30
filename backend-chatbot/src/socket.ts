@@ -36,6 +36,14 @@ export const initializeSocket = (httpServer: http.Server) => {
             console.log(`👨‍💼 Admin ${socket.id} joined conversation: ${conversationId}`);
         });
 
+        // Handle typing events
+        socket.on("typing", (data: { conversationId: string; isTyping: boolean; role: string }) => {
+            const { conversationId, isTyping, role } = data;
+            // Broadcast typing status to all clients in the conversation room except sender
+            socket.to(conversationId).emit("typing", { isTyping, role });
+            console.log(`⌨️  ${role} typing in ${conversationId}: ${isTyping}`);
+        });
+
         // Handle disconnection
         socket.on("disconnect", () => {
             console.log(`❌ Client disconnected: ${socket.id}`);

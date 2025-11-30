@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { socketClient } from "@/lib/socket";
 import { Switch } from "@/components/ui/switch";
-import { useGetConversations, chatKeys } from "@/hooks/useChat";
+import { useGetConversations, chatKeys, useToggleAI } from "@/hooks/useChat";
 import { calculateTime } from "@/lib/calculateTime";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ export default function AdminPage() {
     const { data } = useGetConversations();
     const { admin, isLoading: isLoadingAdmin } = useAdmin();
     const queryClient = useQueryClient();
+    const { mutate: toggleAI } = useToggleAI();
 
     useEffect(() => {
         // Initialize socket connection
@@ -43,7 +44,8 @@ export default function AdminPage() {
     }, [queryClient]);
 
     const handleToggle = (id: string, checked: boolean) => {
-
+        console.log('Toggle clicked:', { id, checked });
+        toggleAI({ conversationId: id, aiEnabled: checked });
     };
 
     const handleRowClick = (id: string) => {
@@ -51,8 +53,8 @@ export default function AdminPage() {
     };
 
     return (
-        <div className="p-8">
-            <div className="flex justify-between items-center mb-6">
+        <div className="md:px-8">
+            <div className="flex justify-between items-center p-3 mb-6">
                 <h2 className="text-2xl font-bold">Chats</h2>
                 {admin && (
                     <div className="text-sm text-gray-600">
@@ -73,10 +75,10 @@ export default function AdminPage() {
                             <div
                                 key={chat.id}
                                 onClick={() => handleRowClick(chat.id)}
-                                className="grid grid-cols-[1fr_2fr_100px_100px] p-4 hover:bg-gray-50 transition-colors items-center cursor-pointer"
+                                className="grid grid-cols-[minmax(0,70px)_1fr_minmax(0,70px)_minmax(0,80px)] sm:grid-cols-[1fr_2fr_100px_100px] p-4 hover:bg-gray-50 transition-colors items-center cursor-pointer gap-2"
                             >
-                                <div className="font-medium text-gray-900">{chat.id}</div>
-                                <div className="text-gray-500 truncate pr-4">{chat.lastMessage}</div>
+                                <div className="font-medium text-gray-900 text-sm truncate">{chat.id}</div>
+                                <div className="text-gray-500 truncate text-sm">{chat.lastMessage}</div>
                                 <div className="flex justify-center">
                                     <div onClick={(e) => e.stopPropagation()}>
                                         <Switch
@@ -86,7 +88,7 @@ export default function AdminPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="text-right text-sm text-gray-400">{chat?.createdAt ? calculateTime(chat.createdAt) : '-'}</div>
+                                <div className="text-right text-xs text-gray-400">{chat?.createdAt ? calculateTime(chat.createdAt) : '-'}</div>
                             </div>
                         ))
                     ) : (

@@ -89,3 +89,54 @@ export const useSaveMessage = () => {
         },
     });
 };
+
+/**
+ * Hook to toggle AI enabled status for a conversation
+ */
+export const useToggleAI = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ conversationId, aiEnabled }: { conversationId: string; aiEnabled: boolean }) => {
+            console.log('Mutation function called:', { conversationId, aiEnabled });
+            return chatService.toggleAI(conversationId, aiEnabled);
+        },
+        onMutate: async ({ conversationId, aiEnabled }) => {
+            console.log('onMutate called:', { conversationId, aiEnabled });
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: chatKeys.conversations() });
+
+            // Snapshot the previous value
+            const previousConversations = queryClient.getQueryData<Conversation[]>(chatKeys.conversations());
+
+            // Optimistically update to the new value
+            if (previousConversations) {
+                queryClient.setQueryData<Conversation[]>(
+                    chatKeys.conversations(),
+                    previousConversations.map(conv =>
+                        conv.id === conversationId ? { ...conv, aiEnabled } : conv
+                    )
+                );
+            }
+
+            // Return a context object with the snapshotted value
+            return { previousConversations };
+        },
+        onSuccess: () => {
+            // Invalidate and refetch conversations
+            queryClient.invalidateQueries({ queryKey: chatKeys.conversations() });
+        },
+        onError: (error, variables, context) => {
+            console.error('Error toggling AI:', error);
+
+            // Rollback to the previous value if mutation fails
+            if (context?.previousConversations) {
+                queryClient.setQueryData(
+                    chatKeys.conversations(),
+                    context.previousConversations
+                );
+            }
+        },
+    });
+};
+
