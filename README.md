@@ -1,6 +1,12 @@
+
 # Real-Time Chatbot Application
 
 A full-stack real-time chatbot application with AI integration, admin dashboard, and live typing indicators. Built with Next.js, Express, Socket.IO, and Google Gemini AI.
+
+## 📚 Documentation
+
+- **[Backend Documentation](./backend-chatbot/README.md)** - API endpoints, database schema, and backend architecture
+- **[Frontend Documentation](./frontend-chatbot/README.md)** - Components, hooks, and frontend architecture
 
 ## 🌟 Features
 
@@ -118,10 +124,6 @@ chatbot/
    - Backend API: http://localhost:8000
    - Admin Dashboard: http://localhost:3000/admin
 
-## 📚 Documentation
-
-- **[Backend Documentation](./backend-chatbot/README.md)** - API endpoints, database schema, and backend architecture
-- **[Frontend Documentation](./frontend-chatbot/README.md)** - Components, hooks, and frontend architecture
 
 ## 🛠️ Tech Stack
 
